@@ -1,0 +1,9 @@
+#!/bin/env dash
+# vim: set ft=sh
+
+is_muted=$(pamixer --get-mute)
+if [ "$is_muted" = "true" ]; then
+	pamixer -u
+else
+	pamixer -m
+fi

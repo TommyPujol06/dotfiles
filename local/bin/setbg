@@ -1,0 +1,26 @@
+#!/bin/env dash
+# vim: set ft=sh
+
+current_wallpaper="$HOME/media/pics/walls/current"
+
+if [ ! -n "$1" ]; then
+	echo "$(basename $0) <wallpaper path>"
+	exit 1
+fi
+
+
+if [ ! -f "$1" ]; then
+	echo "File \`$1\` does not exist."
+	exit 1
+fi
+
+new_wallpaper="$(realpath $1)"
+
+if [ -f "$current_wallpaper" ]; then
+	rm "$current_wallpaper"
+fi
+
+ln -s "$new_wallpaper" "$current_wallpaper"
+feh --bg-scale $HOME/media/pics/walls/current --no-fehbg
+
+notify-send "Your wallpaper has been changed."

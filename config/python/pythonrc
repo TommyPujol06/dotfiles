@@ -1,0 +1,6 @@
+# vim: set ft=python
+import readline
+import os
+
+hf = readline.write_history_file
+readline.write_history_file = lambda *a,**k: hf(os.path.expanduser("~/.config/python/history"))

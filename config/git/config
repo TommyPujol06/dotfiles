@@ -1,0 +1,66 @@
+[user]
+    useConfigOnly = true
+    name = Tommy Pujol
+    email = git@itstommy.xyz
+    signingkey = 7B3941E4F6FAEBB394F966D9A4059BD466FE397D
+
+[commit]
+    gpgsign = true
+
+[alias]
+    lg = log --pretty=custom
+
+[color "branch"]
+    current = green bold
+    local = green
+    remote = yellow
+
+[color "diff"]
+    frag = magenta
+    meta = yellow
+
+    new = green
+    old = red
+
+    newMoved = cyan
+    oldMoved = blue
+
+[color "status"]
+    added = green reverse
+    changed = yellow reverse
+    untracked = red reverse
+
+[core]
+    abbrev = 12
+    autocrlf = input
+    editor = nvim
+
+[diff]
+    colorMoved = zebra
+
+[diff "bin"]
+    textconv = hexdump -v -C
+
+[help]
+    autocorrect = 20
+
+[init]
+    defaultBranch = master
+
+[pretty]
+    custom = "%C(magenta)%h%C(red)%d %C(yellow)%ar %C(green)%s %C(yellow)(%an)"
+
+
+[push]
+    followTags = true
+
+[pull]
+    rebase = true
+[gpg]
+        program = gpg2
+
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f

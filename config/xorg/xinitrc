@@ -1,0 +1,11 @@
+#!/bin/env bash
+
+setxkbmap es &
+feh --bg-scale $HOME/media/pics/walls/current --no-fehbg &
+xcompmgr &
+dunst &
+xset r rate 300 50 &
+sudo redshift -l 41.47063:2.08611 &
+$(sleep 2s && "$HOME/.config/polybar/run.sh") &
+
+exec dwm
