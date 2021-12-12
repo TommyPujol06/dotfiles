@@ -1,6 +1,2 @@
-config.h
-dwm
-*.orig
-*.rej
-*.*.orig
-*.*.rej
+*.o
+patches.h

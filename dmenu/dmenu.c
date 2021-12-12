@@ -610,7 +610,7 @@ setup(void)
 	/* calculate menu geometry */
 	bh = drw->fonts->h + 2;
 	lines = MAX(lines, 0);
-	mh = 30; // ((lines + 1) * bh) + 2;
+	mh = ((lines + 1) * bh) + 10;
 #ifdef XINERAMA
 	i = 0;
 	if (parentwin == root && (info = XineramaQueryScreens(dpy, &n))) {

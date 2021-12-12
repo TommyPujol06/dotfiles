@@ -1,0 +1,19 @@
+#!/bin/env bash
+
+set -e
+
+url=${UPLOAD_URL:-itstommy.xyz}
+host=${UPLOAD_HOST:-venus}
+user=${USER:-tommy}
+base="/var/www/$user/u"
+path="$1"
+file=`openssl rand -hex 16`
+extension="${path#*.}"
+
+if ! [[ $extension = `basename $path` ]]; then
+	file="$file.$extension"
+fi
+
+scp -q -F "$HOME/.config/ssh/config" "$path" "$host:$base/$file"
+
+echo "https://$url/u/$file"

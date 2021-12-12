@@ -1,0 +1,139 @@
+#!/bin/env bash
+
+# CPU information
+C_MODEL="$(awk -F '\\s*: | @' \
+	'/model name|Hardware|Processor|^cpu model|chip type|^cpu type/ {
+	cpu=$2; if ($1 == "Hardware") exit } END { print cpu }' /proc/cpuinfo)"
+C_CORES=`nproc`
+
+# Memory information
+MEM=`free --si -g  | grep 'Mem:'`
+M_TOTAL=`echo $MEM | awk '{print $2}'`
+M_USED=`echo $MEM | awk '{print $3}'`
+M_AVAIL=`echo $MEM | awk '{print $4}'`
+M_CACHE=`echo $MEM | awk '{print $6}'`
+M_FREE=$(($M_AVAIL + $M_CACHE))
+
+# Host information
+NAME=$USER
+HOSTNAME=`cat /etc/hostname`
+EXTIP=`wget --quiet -O- ipv4.icanhazip.com || curl -s ipv4.icanhazip.com`
+KERNEL=`uname -r | sed 's/ARCH/0x0/'`
+
+if pidof httpd >/dev/null 2>&1; then
+	WEBSERV="httpd"
+elif pidof apache2 >/dev/null 2>&1; then
+	WEBSERV="apache2"
+elif pidof nginx >/dev/null 2>&1; then
+	WEBSERV="nginx"
+else
+	WEBSERV=$(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null| grep :80  | awk '{print $1}' | head -1)":80"
+	WEBSERV=$(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null| grep :443 | awk '{print $1}' | head -1)":443"
+fi
+
+# Banner
+printf "\n  "
+i=0
+while [ $i -le 6 ]
+do
+	printf "\e[$((i+41))m\e[$((i+30))m█▓▒░"
+	i=$(($i+1))
+done
+printf "\e[37m█\e[0m▒░\n\n"
+
+printf " \e[1;33m      ┄┄┄━━━┄┄┄┄┄━━━┄┄┄\e[0m\n"
+printf " \e[1;33m	  Username:     \e[0m$NAME\n"
+printf " \e[1;33m	  Public IP:    \e[0m$EXTIP\n"
+printf " \e[1;33m	  Hostname:     \e[0m$HOSTNAME\n"
+printf " \e[1;33m	  Kernel:       \e[0m$KERNEL\n"
+printf " \e[1;33m      ┄┄┄━━━ CPU ━━━┄┄┄\e[0m\n"
+printf " \e[1;33m         Model:	 \e[0m$C_MODEL\n"
+printf " \e[1;33m         Cores:	 \e[0m$C_CORES\n"
+if [ -z "$GPU" ]; then
+	trim() {
+		set -f
+		# shellcheck disable=2048,2086
+		set -- $*
+		printf '%s\n' "${*//[[:space:]]/}"
+		set +f
+	}
+
+	printf " \e[1;33m      ┄┄┄━━━ GPU ━━━┄┄┄\e[0m\n"
+	# GPU information: code taken from neofetch.
+	gpu_cmd="$(lspci -mm | awk -F '\"|\" \"|\\(' \
+		'/"Display|"3D|"VGA/ {a[$0] = $1 " " $3 " " $4}
+		END {for(i in a) {if(!seen[a[i]]++) print a[i]}}')"
+
+	IFS=$'\n' read -d "" -ra gpus <<< "$gpu_cmd"
+
+	[[ "${gpus[0]}" == *Intel* && "${gpus[1]}" == *Intel* ]] && unset -v "gpus[0]"
+
+	num=0
+	for gpu in "${gpus[@]}"; do
+		num=$((num + 1))
+		# GPU shorthand tests.
+		[[ "$gpu_type" == "dedicated" && "$gpu" == *Intel* ]] || \
+		[[ "$gpu_type" == "integrated" && ! "$gpu" == *Intel* ]] && \
+			{ unset -v gpu; continue; }
+
+		case $gpu in
+			*"Advanced"*)
+				brand="${gpu/*AMD*ATI*/AMD ATI}"
+				brand="${brand:-${gpu/*AMD*/AMD}}"
+				brand="${brand:-${gpu/*ATI*/ATi}}"
+
+				gpu="${gpu/\[AMD\/ATI\] }"
+				gpu="${gpu/\[AMD\] }"
+				gpu="${gpu/OEM }"
+				gpu="${gpu/Advanced Micro Devices, Inc.}"
+				gpu="${gpu/*\[}"
+				gpu="${gpu/\]*}"
+				gpu="$brand $gpu"
+			;;
+
+			*"NVIDIA"*)
+				gpu="${gpu/*\[}"
+				gpu="${gpu/\]*}"
+				gpu="NVIDIA $gpu"
+			;;
+
+			*"Intel"*)
+				gpu="${gpu/*Intel/Intel}"
+				gpu="${gpu/\(R\)}"
+				gpu="${gpu/Corporation}"
+				gpu="${gpu/ \(*}"
+				gpu="${gpu/Integrated Graphics Controller}"
+				gpu="${gpu/*Xeon*/Intel HD Graphics}"
+
+				[[ -z "$(trim "$gpu")" ]] && gpu="Intel Integrated Graphics"
+			;;
+
+			*"MCST"*)
+				gpu="${gpu/*MCST*MGA2*/MCST MGA2}"
+			;;
+
+			*"VirtualBox"*)
+				gpu="VirtualBox Graphics Adapter"
+			;;
+
+			*) continue ;;
+		esac
+
+		if [[ "$gpu_brand" == "off" ]]; then
+			gpu="${gpu/AMD }"
+			gpu="${gpu/NVIDIA }"
+			gpu="${gpu/Intel }"
+		fi
+
+		printf " \e[1;33m         GPU #${num}:	\e[0m$gpu\n"
+	done
+fi
+printf " \e[1;33m      ┄┄┄━━━ RAM ━━━┄┄┄\e[0m\n"
+printf " \e[1;33m         Total:	\e[0m$M_TOTAL GB\n"
+printf " \e[1;33m         Used:		\e[0m$M_USED GB\n"
+printf " \e[1;33m         Free:		\e[0m$M_FREE GB\n"
+if [ -z "$WEBSERV" ]; then
+	printf " \e[1;33m ━━━ WEB ━━━\e[0m\n"
+	printf " \e[1;33m     \e[0m$WEBSERV\n"
+fi
+printf " \e[1;33m      ┄┄┄━━━┄┄┄┄┄━━━┄┄┄\e[0m\n\n"

@@ -1,0 +1,4 @@
+#!/bin/env bash
+
+export DRI_PRIME=1
+exec prime-run $HOME/.minecraft/runtime/jre-legacy/linux/jre-legacy/bin/java "$@"
