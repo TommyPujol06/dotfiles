@@ -1,6 +1,13 @@
 # vim: set ft=python
+import atexit
 import readline
 import os
 
+histfile = os.path.expanduser("~/.config/python/history")
+readline.read_history_file(histfile)
+readline.set_history_length(1000)
+
 hf = readline.write_history_file
-readline.write_history_file = lambda *a,**k: hf(os.path.expanduser("~/.config/python/history"))
+hf2 = lambda *_: hf(histfile)
+
+atexit.register(hf2, histfile)
